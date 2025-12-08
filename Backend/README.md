@@ -629,9 +629,9 @@ This project is part of an academic/portfolio project.
 
 **Malik Saad Hayat**  
 Backend Engineer  
-Email: [your.email@example.com]  
-LinkedIn: [linkedin.com/in/yourprofile]  
-GitHub: [@yourusername](https://github.com/yourusername)
+Email: [saadhayat799@gmail.com]  
+LinkedIn: [[linkedin.com/in/yourprofile](https://www.linkedin.com/in/malik-saad-hayat-276370277/)]  
+GitHub: [@yourusername](https://github.com/saadhtiwana)
 
 ---
 
