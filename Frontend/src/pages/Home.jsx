@@ -6,7 +6,6 @@ import { format } from 'date-fns';
 import api from '../utils/api';
 import CarCard from '../components/CarCard';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
-import Footer from '../components/Footer';
 
 const Home = () => {
   const [location, setLocation] = useState('');
@@ -352,10 +351,9 @@ const Home = () => {
           }
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 };
 
 export default Home;
+

@@ -4,7 +4,6 @@ import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import api from '../utils/api';
 import CarCard from '../components/CarCard';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
-import Footer from '../components/Footer';
 
 // Common categories and fuel types (matching backend)
 const CATEGORIES = ['Sedan', 'SUV', 'Hatchback', 'Luxury', 'Sports', 'Van'];
@@ -408,9 +407,6 @@ const Cars = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

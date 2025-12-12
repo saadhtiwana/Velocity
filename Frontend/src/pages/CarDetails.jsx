@@ -20,7 +20,6 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import CarCard from '../components/CarCard';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
-import Footer from '../components/Footer';
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -283,8 +282,8 @@ const CarDetails = () => {
               <div className="mb-6">
                 <span
                   className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${car.status === 'available'
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      : 'bg-red-100 text-red-800 border border-red-200'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : 'bg-red-100 text-red-800 border border-red-200'
                     }`}
                 >
                   {car.status === 'available' ? (
@@ -513,9 +512,6 @@ const CarDetails = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

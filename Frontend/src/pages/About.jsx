@@ -15,7 +15,6 @@ import {
   Phone,
   Mail,
 } from 'lucide-react';
-import Footer from '../components/Footer';
 
 const About = () => {
   const navigate = useNavigate();
@@ -352,9 +351,6 @@ const About = () => {
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

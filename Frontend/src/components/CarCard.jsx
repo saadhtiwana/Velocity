@@ -9,9 +9,6 @@ const CarCard = ({ car, featured = false }) => {
     navigate(`/cars/${car.id}`);
   };
 
-  // Generate random rating for demo (4.0 to 5.0)
-  const rating = (4.0 + Math.random() * 1.0).toFixed(1);
-  const reviews = Math.floor(Math.random() * 50) + 10;
 
   return (
     <motion.div
@@ -49,22 +46,22 @@ const CarCard = ({ car, featured = false }) => {
             </div>
           </div>
         )}
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        
+
         {/* Status Badge */}
         <div className="absolute top-3 left-3">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
-              car.status === 'available'
-                ? 'bg-emerald-500/90 text-white shadow-lg'
-                : 'bg-red-500/90 text-white shadow-lg'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${car.status === 'available'
+              ? 'bg-emerald-500/90 text-white shadow-lg'
+              : 'bg-red-500/90 text-white shadow-lg'
+              }`}
           >
             {car.status === 'available' ? 'Available' : 'Unavailable'}
           </span>
         </div>
+
 
         {/* Featured Badge */}
         {featured && (
@@ -75,16 +72,8 @@ const CarCard = ({ car, featured = false }) => {
             </span>
           </div>
         )}
-
-        {/* Rating Badge */}
-        <div className="absolute bottom-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 flex items-center gap-1">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-semibold text-gray-900">{rating}</span>
-            <span className="text-xs text-gray-600">({reviews})</span>
-          </div>
-        </div>
       </div>
+
 
       {/* Car Details */}
       <div className="p-5">
