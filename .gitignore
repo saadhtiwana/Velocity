@@ -1,6 +1,6 @@
-/* 
-!/.gitignore 
-!/Backend/ 
-!/README.md 
-!/Frontend/    # <-- add this line
+*
+!.gitignore
+!Backend/
+!README.md
+!Frontend/
 

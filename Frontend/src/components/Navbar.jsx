@@ -54,11 +54,10 @@ const Navbar = () => {
   };
 
   const navLinkClass = (path) => {
-    return `px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-      isActive(path)
+    return `px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(path)
         ? 'bg-red-50 text-red-700 shadow-sm'
         : 'text-gray-700 hover:bg-gray-100 hover:text-red-600'
-    }`;
+      }`;
   };
 
   return (
@@ -66,24 +65,16 @@ const Navbar = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
+      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
           ? 'glass shadow-lg backdrop-blur-xl bg-white/90'
           : 'bg-white shadow-sm'
-      }`}
+        }`}
     >
       <div className="container mx-auto px-4 relative">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <Link to="/" className="flex items-center group">
-            <span 
-              style={{
-                fontSize: '24px',
-                fontWeight: 700,
-                color: '#1A1A1A'
-              }}
-              className="font-bold"
-            >
+            <span className="velocity-logo transition-colors duration-200 group-hover:text-red-600">
               VELOCITY
             </span>
           </Link>
@@ -177,8 +168,8 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   className="px-4 py-2 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200 text-sm font-medium"
                 >
                   Login

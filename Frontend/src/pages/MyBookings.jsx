@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
+import Footer from '../components/Footer';
 
 const STATUS_OPTIONS = ['all', 'pending', 'confirmed', 'rejected', 'completed'];
 
@@ -314,6 +315,9 @@ const MyBookings = () => {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

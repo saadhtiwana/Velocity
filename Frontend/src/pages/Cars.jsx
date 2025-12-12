@@ -4,6 +4,7 @@ import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import api from '../utils/api';
 import CarCard from '../components/CarCard';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
+import Footer from '../components/Footer';
 
 // Common categories and fuel types (matching backend)
 const CATEGORIES = ['Sedan', 'SUV', 'Hatchback', 'Luxury', 'Sports', 'Van'];
@@ -53,7 +54,7 @@ const Cars = () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      
+
       // Add all active filters to params
       if (searchParams.get('search')) params.append('search', searchParams.get('search'));
       if (searchParams.get('location')) params.append('location', searchParams.get('location'));
@@ -62,7 +63,7 @@ const Cars = () => {
       if (searchParams.get('min_price')) params.append('min_price', searchParams.get('min_price'));
       if (searchParams.get('max_price')) params.append('max_price', searchParams.get('max_price'));
       if (searchParams.get('seating')) params.append('seating', searchParams.get('seating'));
-      
+
       // Handle category - backend accepts single value, so send first selected
       const categoryParam = searchParams.get('category');
       if (categoryParam) {
@@ -71,7 +72,7 @@ const Cars = () => {
           params.append('category', categories[0]);
         }
       }
-      
+
       // Handle fuel type - backend accepts single value, so send first selected
       const fuelTypeParam = searchParams.get('fuel_type');
       if (fuelTypeParam) {
@@ -93,7 +94,7 @@ const Cars = () => {
 
   const updateFilters = () => {
     const newParams = new URLSearchParams();
-    
+
     if (search.trim()) newParams.append('search', search.trim());
     if (location.trim()) newParams.append('location', location.trim());
     if (pickupDate) newParams.append('pickup_date', pickupDate);
@@ -112,7 +113,7 @@ const Cars = () => {
       ? selectedCategories.filter(c => c !== category)
       : [...selectedCategories, category];
     setSelectedCategories(newCategories);
-    
+
     // Update URL immediately
     const newParams = new URLSearchParams(searchParams);
     if (newCategories.length > 0) {
@@ -128,7 +129,7 @@ const Cars = () => {
       ? selectedFuelTypes.filter(f => f !== fuelType)
       : [...selectedFuelTypes, fuelType];
     setSelectedFuelTypes(newFuelTypes);
-    
+
     // Update URL immediately
     const newParams = new URLSearchParams(searchParams);
     if (newFuelTypes.length > 0) {
@@ -176,9 +177,8 @@ const Cars = () => {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Filter Sidebar */}
           <aside
-            className={`${
-              showFilters ? 'block' : 'hidden'
-            } md:block w-full md:w-80 bg-white rounded-lg shadow-md p-6 h-fit sticky top-4`}
+            className={`${showFilters ? 'block' : 'hidden'
+              } md:block w-full md:w-80 bg-white rounded-lg shadow-md p-6 h-fit sticky top-4`}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center">
@@ -408,6 +408,9 @@ const Cars = () => {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

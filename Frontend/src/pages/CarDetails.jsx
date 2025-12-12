@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import CarCard from '../components/CarCard';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
+import Footer from '../components/Footer';
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -72,7 +73,7 @@ const CarDetails = () => {
       const params = new URLSearchParams();
       if (car.category) params.append('category', car.category);
       if (car.location) params.append('location', car.location);
-      
+
       const response = await api.get(`/api/cars?${params.toString()}`);
       const similar = response.data.filter(c => c.id !== car.id).slice(0, 4);
       setSimilarCars(similar);
@@ -137,7 +138,7 @@ const CarDetails = () => {
 
     try {
       setBookingLoading(true);
-      
+
       // Convert dates to ISO datetime format (backend expects "2025-01-15T10:00:00")
       const pickupDateTime = `${booking.pickup_date}T10:00:00`;
       const returnDateTime = `${booking.return_date}T10:00:00`;
@@ -281,11 +282,10 @@ const CarDetails = () => {
               {/* Status Badge */}
               <div className="mb-6">
                 <span
-                  className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
-                    car.status === 'available'
+                  className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${car.status === 'available'
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                       : 'bg-red-100 text-red-800 border border-red-200'
-                  }`}
+                    }`}
                 >
                   {car.status === 'available' ? (
                     <>
@@ -513,6 +513,9 @@ const CarDetails = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
