@@ -1,19 +1,121 @@
+# ============================================
+# VELOCITY - Car Rental Platform
+# Backend Python Dependencies
+# ============================================
+# 
+# Installation Instructions:
+# 1. Create a virtual environment: python -m venv venv
+# 2. Activate virtual environment:
+#    - Windows: venv\Scripts\activate
+#    - Mac/Linux: source venv/bin/activate
+# 3. Install dependencies: pip install -r requirements.txt
+#
+# ============================================
+
+# ============================================
+# CORE FRAMEWORK
+# ============================================
+
+# FastAPI - Modern, fast web framework for building APIs
 fastapi==0.115.6
+
+# Uvicorn - ASGI server for running FastAPI applications
+# [standard] includes websockets and other useful extras
 uvicorn[standard]==0.32.1
+
+# ============================================
+# DATABASE & ORM
+# ============================================
+
+# SQLAlchemy - SQL toolkit and ORM
+# [asyncio] enables async database operations
 sqlalchemy[asyncio]==2.0.36
+
+# AsyncPG - PostgreSQL database adapter for async operations
 asyncpg==0.30.0
+
+# Alembic - Database migration tool for SQLAlchemy
 alembic==1.14.0
+
+# ============================================
+# DATA VALIDATION & SETTINGS
+# ============================================
+
+# Pydantic - Data validation using Python type annotations
 pydantic==2.10.6
+
+# Pydantic Settings - Settings management using Pydantic
 pydantic-settings==2.7.1
+
+# ============================================
+# AUTHENTICATION & SECURITY
+# ============================================
+
+# Python-JOSE - JavaScript Object Signing and Encryption for JWTs
+# [cryptography] includes cryptographic signing algorithms
 python-jose[cryptography]==3.3.0
+
+# Passlib - Password hashing library
+# [bcrypt] includes bcrypt hashing algorithm
 passlib[bcrypt]==1.7.4
+
+# Bcrypt - Password hashing
 bcrypt==4.0.1
+
+# ============================================
+# FILE UPLOAD & UTILITIES
+# ============================================
+
+# Python-Multipart - Streaming multipart parser for file uploads
 python-multipart==0.0.6
+
+# Python-Dotenv - Read environment variables from .env file
 python-dotenv==1.0.0
+
+# ImageKitIO - Image CDN and storage service SDK
 imagekitio==3.2.0
 
+# ============================================
+# WEBSOCKETS (included in uvicorn[standard])
+# ============================================
+# WebSockets support is included with uvicorn[standard]
+# Used for real-time chat messaging feature
 
-# Testing dependencies
+# ============================================
+# TESTING DEPENDENCIES
+# ============================================
+
+# Pytest - Testing framework
 pytest==7.4.3
+
+# HTTPX - Async HTTP client for testing FastAPI endpoints
 httpx==0.25.2
+
+# Pytest-Asyncio - Pytest support for asyncio
 pytest-asyncio==0.21.1
+
+# ============================================
+# ADDITIONAL NOTES
+# ============================================
+#
+# Database Setup:
+# - Requires PostgreSQL database
+# - Create database: CREATE DATABASE velocity;
+# - Update DATABASE_URL in .env file
+#
+# Environment Variables (.env file):
+# - DATABASE_URL=postgresql+asyncpg://user:password@localhost/velocity
+# - SECRET_KEY=your-secret-key-here
+# - IMAGEKIT_PUBLIC_KEY=your-imagekit-public-key
+# - IMAGEKIT_PRIVATE_KEY=your-imagekit-private-key
+# - IMAGEKIT_URL_ENDPOINT=your-imagekit-url-endpoint
+#
+# Running the Application:
+# - Development: uvicorn app.main:app --reload
+# - Production: uvicorn app.main:app --host 0.0.0.0 --port 8000
+#
+# API Documentation:
+# - Swagger UI: http://localhost:8000/docs
+# - ReDoc: http://localhost:8000/redoc
+#
+# ============================================

@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.utils.auth import decode_access_token
-from app.database import get_db
+from app.database import get_db, AsyncSessionLocal
 from app.models.user import User
 
 security = HTTPBearer()
@@ -87,3 +87,34 @@ async def require_renter(current_user: User = Depends(get_current_user)):
             detail="Renter access required"
         )
     return current_user
+
+async def get_current_user_ws(token: str) -> User | None:
+    """
+    Get current user from WebSocket token (for real-time chat)
+    
+    Args:
+        token: JWT token string
+        
+    Returns:
+        User object if valid, None otherwise
+    """
+    try:
+        payload = decode_access_token(token)
+        
+        if payload is None:
+            return None
+        
+        user_id = payload.get("user_id")
+        
+        if user_id is None:
+            return None
+        
+        # Create a new database session for WebSocket
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+            return user
+    
+    except Exception as e:
+        print(f"WebSocket auth error: {e}")
+        return None

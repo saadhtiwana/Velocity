@@ -180,6 +180,7 @@ async def get_my_bookings(
         
         # If confirmed, include owner details
         if booking.status == "confirmed":
+            booking_response.owner_id = owner.id
             booking_response.owner_name = owner.full_name
             booking_response.owner_phone = owner.phone
         

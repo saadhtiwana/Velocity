@@ -29,6 +29,7 @@ class BookingResponse(BaseModel):
     car_model: Optional[str] = None
     car_image_url: Optional[str] = None
     # Optional owner/renter details
+    owner_id: Optional[str] = None
     owner_name: Optional[str] = None
     owner_phone: Optional[str] = None
     renter_name: Optional[str] = None

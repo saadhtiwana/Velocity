@@ -12,9 +12,18 @@ import {
   X,
   AlertCircle,
 } from 'lucide-react';
+
+import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
+
+
+import ChatBox from '../components/ChatBox';
+
+
+
+
 
 const STATUS_OPTIONS = ['all', 'pending', 'confirmed', 'rejected', 'completed'];
 
@@ -24,6 +33,7 @@ const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [activeChat, setActiveChat] = useState(null);
 
   useEffect(() => {
     // Check authentication and role
@@ -174,9 +184,9 @@ const MyBookings = () => {
                   className="relative h-48 bg-gray-200 cursor-pointer group"
                   onClick={() => navigate(`/cars/${booking.car_id || booking.car?.id}`)}
                 >
-                  {booking.car?.image_url ? (
+                  {booking.car_image_url ? (
                     <img
-                      src={booking.car.image_url}
+                      src={booking.car_image_url}
                       alt={`${booking.car_brand || booking.car?.brand} ${booking.car_model || booking.car?.model}`}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
@@ -264,43 +274,59 @@ const MyBookings = () => {
                   </div>
 
                   {/* Owner Contact Info (if confirmed) */}
-                  {booking.status === 'confirmed' && booking.car?.owner && (
-                    <div className="mt-4 pt-4 border-t bg-red-50 rounded-md p-4">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                        <User className="w-4 h-4 mr-2" />
-                        Owner Contact
-                      </h4>
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-700">
-                          <span className="font-medium">Name:</span>{' '}
-                          {booking.car.owner.full_name}
-                        </p>
-                        {booking.car.owner.phone && (
-                          <div className="flex items-center text-sm text-gray-700">
-                            <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                            <span className="font-medium">Phone:</span>
-                            <a
-                              href={`tel:${booking.car.owner.phone}`}
-                              className="ml-2 text-red-600 hover:text-red-700 transition-colors"
-                            >
-                              {booking.car.owner.phone}
-                            </a>
-                          </div>
-                        )}
-                        {booking.car.owner.email && (
+                  {booking.status === 'confirmed' && booking.owner_name && (
+                    <>
+                      <div className="mt-4 pt-4 border-t bg-red-50 rounded-md p-4">
+                        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                          <User className="w-4 h-4 mr-2" />
+                          Owner Contact
+                        </h4>
+                        <div className="space-y-2">
                           <p className="text-sm text-gray-700">
-                            <span className="font-medium">Email:</span>{' '}
-                            <a
-                              href={`mailto:${booking.car.owner.email}`}
-                              className="text-red-600 hover:text-red-700 transition-colors"
-                            >
-                              {booking.car.owner.email}
-                            </a>
+                            <span className="font-medium">Name:</span>{' '}
+                            {booking.owner_name}
                           </p>
-                        )}
+                          {booking.owner_phone && (
+                            <div className="flex items-center text-sm text-gray-700">
+                              <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                              <span className="font-medium">Phone:</span>
+                              <a
+                                href={`tel:${booking.owner_phone}`}
+                                className="ml-2 text-red-600 hover:text-red-700 transition-colors"
+                              >
+                                {booking.owner_phone}
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+
+                      {/* Chat Button */}
+                      <button
+                        onClick={() => setActiveChat({
+                          booking: booking,
+                          otherUser: {
+                            id: booking.owner_id,
+                            full_name: booking.owner_name,
+                            role: 'Owner'
+                          }
+                        })}
+                        className="mt-3 w-full px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Chat with Owner
+                      </button>
+                    </>
                   )}
+
+
+
+
+
+
+
 
                   {/* Booking Date */}
                   {booking.created_at && (
@@ -314,6 +340,22 @@ const MyBookings = () => {
           </div>
         )}
       </div>
+
+      {/* Chat Modal */}
+      <AnimatePresence>
+        {activeChat && (
+          <ChatBox
+            booking={activeChat.booking}
+            otherUser={activeChat.otherUser}
+            onClose={() => setActiveChat(null)}
+          />
+        )}
+      </AnimatePresence>
+
+
+
+
+
     </div>
   );
 };
