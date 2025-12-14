@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="Frontend/public/logo.png" alt="Velocity Logo" width="120"/>
-</p>
-
 <h1 align="center">Velocity</h1>
 
 <p align="center">
