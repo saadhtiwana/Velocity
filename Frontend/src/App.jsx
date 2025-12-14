@@ -12,6 +12,7 @@ import MyBookings from './pages/MyBookings'
 import About from './pages/About'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import NotFound from './pages/NotFound'
 import OwnerDashboard from './pages/owner/OwnerDashboard'
 import AddCar from './pages/owner/AddCar'
 import ManageCars from './pages/owner/ManageCars'
@@ -101,6 +102,9 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+
+          {/* 404 Catch-all Route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       {!hideNavAndFooter && <Footer />}

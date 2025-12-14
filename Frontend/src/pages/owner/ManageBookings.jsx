@@ -93,8 +93,8 @@ const ManageBookings = () => {
               key={status}
               onClick={() => setStatusFilter(status)}
               className={`pb-4 px-2 font-semibold transition-colors relative ${statusFilter === status
-                  ? 'text-red-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'text-red-600'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -162,57 +162,57 @@ const ManageBookings = () => {
                     <div>
                       <p className="text-sm font-semibold text-gray-600">Total Amount</p>
                       <p className="text-xl font-bold text-red-600">
-                        ${booking.total_price.toFixed(2)}
+                        Rs. {booking.total_price.toFixed(2)}
                       </p>
                     </div>
                   </div>
 
                   {/* Actions */}
-<div className="lg:col-span-1 flex flex-col justify-center gap-3">
-  {booking.status === 'pending' && (
-    <>
-      <button
-        onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
-        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
-      >
-        Confirm Booking
-      </button>
-      <button
-        onClick={() => handleUpdateStatus(booking.id, 'rejected')}
-        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-      >
-        Reject Booking
-      </button>
-    </>
-  )}
-  {booking.status === 'confirmed' && (
-    <>
-      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-        <p className="text-sm text-green-800 font-semibold">
-          ✓ Booking Confirmed
-        </p>
-        <p className="text-xs text-green-700 mt-1">
-          Chat with renter below
-        </p>
-      </div>
-      <button
-        onClick={() => setActiveChat({
-          booking: booking,
-          otherUser: {
-            id: booking.renter_id,
-            full_name: booking.renter_name,
-            role: 'Renter'
-          }
-        })}
-        className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold flex items-center justify-center gap-2"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-        Chat with Renter
-      </button>
-    </>
-  )}
+                  <div className="lg:col-span-1 flex flex-col justify-center gap-3">
+                    {booking.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
+                          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                        >
+                          Confirm Booking
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(booking.id, 'rejected')}
+                          className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                        >
+                          Reject Booking
+                        </button>
+                      </>
+                    )}
+                    {booking.status === 'confirmed' && (
+                      <>
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-sm text-green-800 font-semibold">
+                            ✓ Booking Confirmed
+                          </p>
+                          <p className="text-xs text-green-700 mt-1">
+                            Chat with renter below
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setActiveChat({
+                            booking: booking,
+                            otherUser: {
+                              id: booking.renter_id,
+                              full_name: booking.renter_name,
+                              role: 'Renter'
+                            }
+                          })}
+                          className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          Chat with Renter
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 

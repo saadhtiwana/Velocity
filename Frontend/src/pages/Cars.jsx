@@ -264,7 +264,7 @@ const Cars = () => {
               {/* Price Range */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price Range (per day)
+                  Price Range (PKR per day)
                 </label>
                 <div className="flex gap-2">
                   <input

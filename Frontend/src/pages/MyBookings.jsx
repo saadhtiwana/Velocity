@@ -269,7 +269,7 @@ const MyBookings = () => {
                       <span className="text-sm">Total Price</span>
                     </div>
                     <span className="text-2xl font-bold text-red-600">
-                      ${booking.total_price?.toFixed(2) || '0.00'}
+                      Rs. {booking.total_price?.toFixed(2) || '0.00'}
                     </span>
                   </div>
 
@@ -472,7 +472,7 @@ const MyBookings = () => {
                     <div>
                       <p className="text-sm text-gray-700 mb-1">Total Price</p>
                       <p className="text-4xl font-bold text-red-600">
-                        ${selectedBooking.total_price?.toFixed(2) || '0.00'}
+                        Rs. {selectedBooking.total_price?.toFixed(2) || '0.00'}
                       </p>
                     </div>
                     <svg className="w-16 h-16 text-red-600 opacity-20" fill="currentColor" viewBox="0 0 24 24">
