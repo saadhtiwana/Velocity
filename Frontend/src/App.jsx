@@ -111,9 +111,9 @@ function AppContent() {
                 <Chats />
               </ProtectedRoute>
             }
+          />
 
-
-            {/* 404 Catch-all Route */}
+          {/* 404 Catch-all Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
