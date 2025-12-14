@@ -142,8 +142,8 @@ const ManageCars = () => {
                   <div className="absolute top-3 right-3">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${car.status === 'available'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
                         }`}
                     >
                       {car.status === 'available' ? 'Available' : 'Unavailable'}
@@ -159,7 +159,7 @@ const ManageCars = () => {
                     {car.year} • {car.category} • {car.fuel_type}
                   </p>
                   <p className="text-2xl font-bold text-red-600 mb-4">
-                    ${car.daily_price}/day
+                    Rs. {car.daily_price}/day
                   </p>
 
                   {/* Actions */}
@@ -255,7 +255,7 @@ const ManageCars = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Daily Price ($)
+                    Daily Price (PKR)
                   </label>
                   <input
                     type="number"

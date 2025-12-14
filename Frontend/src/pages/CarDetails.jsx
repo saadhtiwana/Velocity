@@ -274,7 +274,7 @@ const CarDetails = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-4xl font-bold bg-gradient-to-r from-red-600 to-red-600 bg-clip-text text-transparent">
-                    ${car.daily_price}
+                    Rs. {car.daily_price}
                   </p>
                   <p className="text-sm text-gray-500">per day</p>
                 </div>
@@ -438,7 +438,7 @@ const CarDetails = () => {
                     >
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Daily Rate</span>
-                        <span className="text-gray-900 font-semibold">${car.daily_price}</span>
+                        <span className="text-gray-900 font-semibold">Rs. {car.daily_price}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Days</span>
@@ -447,7 +447,7 @@ const CarDetails = () => {
                       <div className="border-t border-red-200 pt-3 flex justify-between items-center">
                         <span className="font-bold text-gray-900">Total Price</span>
                         <span className="text-3xl font-bold bg-gradient-to-r from-red-600 to-red-600 bg-clip-text text-transparent">
-                          ${totalPrice.toFixed(2)}
+                          Rs. {totalPrice.toFixed(2)}
                         </span>
                       </div>
                     </motion.div>

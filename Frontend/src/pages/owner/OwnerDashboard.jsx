@@ -129,7 +129,7 @@ const OwnerDashboard = () => {
               This Month Revenue
             </div>
             <div className="text-4xl font-bold text-green-600">
-              ${stats?.monthly_revenue?.toFixed(2) || '0.00'}
+              Rs. {stats?.monthly_revenue?.toFixed(2) || '0.00'}
             </div>
             <p className="text-sm text-gray-600 mt-3">From confirmed bookings</p>
           </motion.div>
@@ -187,7 +187,7 @@ const OwnerDashboard = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-gray-900">
-                          ${booking.total_price.toFixed(2)}
+                          Rs. {booking.total_price.toFixed(2)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
