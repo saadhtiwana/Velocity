@@ -55,8 +55,8 @@ const Navbar = () => {
 
   const navLinkClass = (path) => {
     return `px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(path)
-        ? 'bg-red-50 text-red-700 shadow-sm'
-        : 'text-gray-700 hover:bg-gray-100 hover:text-red-600'
+      ? 'bg-red-50 text-red-700 shadow-sm'
+      : 'text-gray-700 hover:bg-gray-100 hover:text-red-600'
       }`;
   };
 
@@ -66,8 +66,8 @@ const Navbar = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.3 }}
       className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
-          ? 'glass shadow-lg backdrop-blur-xl bg-white/90'
-          : 'bg-white shadow-sm'
+        ? 'glass shadow-lg backdrop-blur-xl bg-white/90'
+        : 'bg-white shadow-sm'
         }`}
     >
       <div className="container mx-auto px-4 relative">
@@ -114,6 +114,9 @@ const Navbar = () => {
                     </Link>
                     <Link to="/owner/bookings" className={navLinkClass('/owner/bookings')}>
                       Bookings
+                    </Link>
+                    <Link to="/owner/chats" className={navLinkClass('/owner/chats')}>
+                      Chats
                     </Link>
                   </>
                 )}
@@ -263,6 +266,13 @@ const Navbar = () => {
                           className={`block px-3 py-2 rounded-lg text-base font-medium transition-all ${navLinkClass('/owner/bookings')}`}
                         >
                           Bookings
+                        </Link>
+                        <Link
+                          to="/owner/chats"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`block px-3 py-2 rounded-lg text-base font-medium transition-all ${navLinkClass('/owner/chats')}`}
+                        >
+                          Chats
                         </Link>
                       </>
                     )}

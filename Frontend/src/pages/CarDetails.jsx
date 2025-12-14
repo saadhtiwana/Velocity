@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import CarCard from '../components/CarCard';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
+import ChatBox from '../components/ChatBox';
 
 const CarDetails = () => {
   const { id } = useParams();
@@ -35,6 +36,7 @@ const CarDetails = () => {
   });
   const [error, setError] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -477,6 +479,19 @@ const CarDetails = () => {
                       This car is currently unavailable
                     </p>
                   )}
+
+                  {/* Chat with Owner Button */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => setShowChat(true)}
+                      className="w-full px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-semibold flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      Chat with Owner
+                    </button>
+                  </div>
                 </form>
               )}
             </motion.div>
@@ -510,6 +525,20 @@ const CarDetails = () => {
               <X className="w-8 h-8" />
             </button>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Chat Modal */}
+      <AnimatePresence>
+        {showChat && car && isAuthenticated && user?.role === 'renter' && (
+          <ChatBox
+            car={car}
+            otherUser={{
+              id: car.owner_id,
+              full_name: car.owner_name || 'Car Owner'
+            }}
+            onClose={() => setShowChat(false)}
+          />
         )}
       </AnimatePresence>
     </div>

@@ -16,6 +16,7 @@ import OwnerDashboard from './pages/owner/OwnerDashboard'
 import AddCar from './pages/owner/AddCar'
 import ManageCars from './pages/owner/ManageCars'
 import ManageBookings from './pages/owner/ManageBookings'
+import Chats from './pages/owner/Chats'
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -98,6 +99,14 @@ function AppContent() {
             element={
               <ProtectedRoute requireRole="owner">
                 <ManageBookings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/owner/chats"
+            element={
+              <ProtectedRoute requireRole="owner">
+                <Chats />
               </ProtectedRoute>
             }
           />

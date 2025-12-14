@@ -21,7 +21,7 @@ const UserIcon = ({ className }) => (
   </svg>
 );
 
-const ChatBox = ({ booking, otherUser, onClose }) => {
+const ChatBox = ({ booking, car, otherUser, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -29,6 +29,23 @@ const ChatBox = ({ booking, otherUser, onClose }) => {
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+  // Determine chat context
+  const chatContext = booking ? {
+    type: 'booking',
+    id: booking.id,
+    wsId: booking.id, // Booking ID is unique room
+    carBrand: booking.car_brand || booking.car?.brand,
+    carModel: booking.car_model || booking.car?.model
+  } : {
+    type: 'car',
+    id: car.id,
+    // WS Room: unique combination of car + renter (either me or other)
+    // If I am owner, foreign user is renter. If I am renter, I am renter.
+    wsId: `car_${car.id}_${currentUser.role === 'owner' ? otherUser.id : currentUser.id}`,
+    carBrand: car.brand,
+    carModel: car.model
+  };
 
   useEffect(() => {
     loadMessages();
@@ -39,7 +56,7 @@ const ChatBox = ({ booking, otherUser, onClose }) => {
         wsRef.current.close();
       }
     };
-  }, [booking.id]);
+  }, [chatContext.id, otherUser.id]); // Re-connect if otherUser changes
 
   useEffect(() => {
     scrollToBottom();
@@ -47,12 +64,12 @@ const ChatBox = ({ booking, otherUser, onClose }) => {
 
   const connectWebSocket = () => {
     const token = localStorage.getItem('token');
-    const wsUrl = `ws://localhost:8000/ws/chat/${booking.id}?token=${token}`;
+    const wsUrl = `ws://localhost:8000/ws/chat/${chatContext.wsId}?token=${token}`;
 
     wsRef.current = new WebSocket(wsUrl);
 
     wsRef.current.onopen = () => {
-      console.log('✅ WebSocket connected');
+      console.log('✅ WebSocket connected to room:', chatContext.wsId);
     };
 
     wsRef.current.onmessage = (event) => {
@@ -62,7 +79,8 @@ const ChatBox = ({ booking, otherUser, onClose }) => {
         const newMsg = data.message;
         setMessages(prev => [...prev, {
           id: Date.now().toString(),
-          booking_id: booking.id,
+          booking_id: booking?.id,
+          car_id: car?.id,
           sender_id: data.sender_id,
           receiver_id: currentUser.id,
           message_content: newMsg.message_content || newMsg.content,
@@ -84,7 +102,15 @@ const ChatBox = ({ booking, otherUser, onClose }) => {
   const loadMessages = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/messages/${booking.id}`);
+      let params = '';
+      if (chatContext.type === 'booking') {
+        params = `booking_id=${chatContext.id}`;
+      } else {
+        // For car chats, we pass car_id AND other_user_id (the person we are talking to)
+        params = `car_id=${chatContext.id}&other_user_id=${otherUser.id}`;
+      }
+
+      const response = await api.get(`/api/messages?${params}`);
       setMessages(response.data);
     } catch (error) {
       console.error('Failed to load messages:', error);
@@ -101,7 +127,7 @@ const ChatBox = ({ booking, otherUser, onClose }) => {
 
     try {
       const messageData = {
-        booking_id: booking.id,
+        [chatContext.type === 'booking' ? 'booking_id' : 'car_id']: chatContext.id,
         receiver_id: otherUser.id,
         message_content: newMessage.trim()
       };
@@ -123,7 +149,8 @@ const ChatBox = ({ booking, otherUser, onClose }) => {
       setNewMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
-      alert('Failed to send message. Please try again.');
+      const errorMsg = error.response?.data?.detail || 'Failed to send message. Please try again.';
+      alert(errorMsg);
     } finally {
       setSending(false);
     }
@@ -166,7 +193,7 @@ const ChatBox = ({ booking, otherUser, onClose }) => {
             <div>
               <h3 className="font-bold">{otherUser.full_name}</h3>
               <p className="text-xs text-gray-300">
-                {booking.car_brand} {booking.car_model}
+                {chatContext.carBrand} {chatContext.carModel}
               </p>
             </div>
           </div>
