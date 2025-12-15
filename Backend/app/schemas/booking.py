@@ -34,3 +34,8 @@ class BookingResponse(BaseModel):
     owner_phone: Optional[str] = None
     renter_name: Optional[str] = None
     renter_phone: Optional[str] = None
+    # Payment fields
+    payment_status: Optional[str] = None
+    payment_intent_id: Optional[str] = None
+    stripe_payment_method: Optional[str] = None
+    amount_paid: Optional[float] = None

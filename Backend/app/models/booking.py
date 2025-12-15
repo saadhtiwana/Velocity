@@ -17,6 +17,12 @@ class Booking(Base):
     status = Column(String, default="pending", nullable=False)  # pending, confirmed, rejected, completed
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     
+    # Payment fields
+    payment_status = Column(String, default="pending", nullable=False)  # pending, paid, failed, refunded
+    payment_intent_id = Column(String, nullable=True)
+    stripe_payment_method = Column(String, nullable=True)  # card brand/last4
+    amount_paid = Column(Float, nullable=True)
+    
     # Relationships
     car = relationship("Car", back_populates="bookings")
     renter = relationship("User", back_populates="bookings")

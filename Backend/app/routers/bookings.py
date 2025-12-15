@@ -8,6 +8,13 @@ from app.models.user import User
 from app.models.car import Car
 from app.models.booking import Booking
 from app.middleware.auth import get_current_user, require_owner, require_renter
+from app.services.stripe_service import (
+    create_payment_intent,
+    confirm_payment,
+    get_payment_details,
+    refund_payment,
+    cancel_payment_intent
+)
 from datetime import datetime
 import uuid
 
@@ -119,7 +126,8 @@ async def create_booking(
         pickup_date=booking_data.pickup_date,
         return_date=booking_data.return_date,
         total_price=total_price,
-        status="pending"
+        status="pending",
+        payment_status="pending"
     )
     
     db.add(new_booking)
@@ -137,7 +145,11 @@ async def create_booking(
         created_at=new_booking.created_at,
         car_brand=car.brand,
         car_model=car.model,
-        car_image_url=car.image_url
+        car_image_url=car.image_url,
+        payment_status=new_booking.payment_status,
+        payment_intent_id=new_booking.payment_intent_id,
+        stripe_payment_method=new_booking.stripe_payment_method,
+        amount_paid=new_booking.amount_paid
     )
 
 @router.get("/my-bookings", response_model=List[BookingResponse])
@@ -175,7 +187,11 @@ async def get_my_bookings(
             created_at=booking.created_at,
             car_brand=car.brand,
             car_model=car.model,
-            car_image_url=car.image_url
+            car_image_url=car.image_url,
+            payment_status=booking.payment_status,
+            payment_intent_id=booking.payment_intent_id,
+            stripe_payment_method=booking.stripe_payment_method,
+            amount_paid=booking.amount_paid
         )
         
         # If confirmed, include owner details
@@ -225,7 +241,11 @@ async def get_my_car_bookings(
             car_model=car.model,
             car_image_url=car.image_url,
             renter_name=renter.full_name,
-            renter_phone=renter.phone
+            renter_phone=renter.phone,
+            payment_status=booking.payment_status,
+            payment_intent_id=booking.payment_intent_id,
+            stripe_payment_method=booking.stripe_payment_method,
+            amount_paid=booking.amount_paid
         ))
     
     return result_list
@@ -274,6 +294,13 @@ async def update_booking_status(
             detail="Only pending bookings can be updated"
         )
     
+    # Check payment status - owner can only confirm bookings with payment_status='paid'
+    if status_update.status == "confirmed" and booking.payment_status != "paid":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot confirm booking without payment. Payment status must be 'paid'."
+        )
+    
     # Check car ownership
     if car.owner_id != current_user.id:
         raise HTTPException(
@@ -299,7 +326,11 @@ async def update_booking_status(
         car_model=car.model,
         car_image_url=car.image_url,
         renter_name=renter.full_name,
-        renter_phone=renter.phone
+        renter_phone=renter.phone,
+        payment_status=booking.payment_status,
+        payment_intent_id=booking.payment_intent_id,
+        stripe_payment_method=booking.stripe_payment_method,
+        amount_paid=booking.amount_paid
     )
 
 @router.get("/owner/dashboard")
@@ -376,3 +407,277 @@ async def get_owner_dashboard(
         "monthly_revenue": float(monthly_revenue),
         "recent_bookings": recent_bookings_list
     }
+
+@router.get("/{booking_id}/payment-intent")
+async def get_payment_intent(
+    booking_id: str,
+    current_user: User = Depends(require_renter),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get or create payment intent for a booking
+    
+    Renter only endpoint
+    """
+    # Find booking
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking not found"
+        )
+    
+    # Check ownership
+    if booking.renter_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only access your own bookings"
+        )
+    
+    # Check payment status
+    if booking.payment_status not in ["pending", "failed"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot create payment intent. Current payment status: {booking.payment_status}"
+        )
+    
+    # If payment_intent_id exists, try to retrieve it
+    if booking.payment_intent_id:
+        try:
+            payment_intent = confirm_payment(booking.payment_intent_id)
+            # If payment intent is still in a valid state, return it
+            if payment_intent.get('status') in ['requires_payment_method', 'requires_confirmation', 'requires_action']:
+                return {
+                    'client_secret': payment_intent.get('client_secret'),
+                    'payment_intent_id': payment_intent.get('id'),
+                    'amount': payment_intent.get('amount', 0) / 100
+                }
+        except Exception:
+            # If retrieval fails, create a new one
+            pass
+    
+    # Create new payment intent
+    try:
+        payment_data = create_payment_intent(
+            booking_id=booking.id,
+            user_id=current_user.id,
+            amount=booking.total_price,
+            currency='usd'
+        )
+        
+        # Save payment_intent_id to booking
+        booking.payment_intent_id = payment_data['payment_intent_id']
+        await db.commit()
+        
+        return {
+            'client_secret': payment_data['client_secret'],
+            'payment_intent_id': payment_data['payment_intent_id'],
+            'amount': booking.total_price
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create payment intent: {str(e)}"
+        )
+
+@router.post("/{booking_id}/confirm-payment")
+async def confirm_booking_payment(
+    booking_id: str,
+    current_user: User = Depends(require_renter),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Confirm payment for a booking
+    
+    Renter only endpoint
+    """
+    # Find booking
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking not found"
+        )
+    
+    # Check ownership
+    if booking.renter_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only confirm payment for your own bookings"
+        )
+    
+    if not booking.payment_intent_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No payment intent found for this booking"
+        )
+    
+    # Verify payment with Stripe
+    try:
+        payment_intent = confirm_payment(booking.payment_intent_id)
+        
+        if payment_intent.get('status') == 'succeeded':
+            # Get payment details
+            payment_details = get_payment_details(booking.payment_intent_id)
+            
+            # Update booking
+            booking.payment_status = 'paid'
+            booking.amount_paid = payment_details['amount']
+            
+            # Format payment method info
+            pm_info = payment_details.get('payment_method')
+            if pm_info:
+                booking.stripe_payment_method = f"{pm_info.get('brand', '').upper()} •••• {pm_info.get('last4', '')}"
+            
+            # Keep booking status as 'pending' (awaiting owner approval)
+            await db.commit()
+            await db.refresh(booking)
+            
+            # Get car details for response
+            car_result = await db.execute(select(Car).where(Car.id == booking.car_id))
+            car = car_result.scalar_one_or_none()
+            
+            return BookingResponse(
+                id=booking.id,
+                car_id=booking.car_id,
+                renter_id=booking.renter_id,
+                pickup_date=booking.pickup_date,
+                return_date=booking.return_date,
+                total_price=booking.total_price,
+                status=booking.status,
+                created_at=booking.created_at,
+                car_brand=car.brand if car else None,
+                car_model=car.model if car else None,
+                car_image_url=car.image_url if car else None,
+                payment_status=booking.payment_status,
+                payment_intent_id=booking.payment_intent_id,
+                stripe_payment_method=booking.stripe_payment_method,
+                amount_paid=booking.amount_paid
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Payment not completed. Status: {payment_intent.get('status')}"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to confirm payment: {str(e)}"
+        )
+
+@router.post("/{booking_id}/cancel-payment")
+async def cancel_booking_payment(
+    booking_id: str,
+    current_user: User = Depends(require_renter),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Cancel payment and delete booking
+    
+    Renter only endpoint
+    """
+    # Find booking
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking not found"
+        )
+    
+    # Check ownership
+    if booking.renter_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only cancel your own bookings"
+        )
+    
+    # Cancel payment intent if exists
+    if booking.payment_intent_id:
+        try:
+            cancel_payment_intent(booking.payment_intent_id)
+        except Exception:
+            # Continue even if cancellation fails
+            pass
+    
+    # Delete booking
+    await db.delete(booking)
+    await db.commit()
+    
+    return {"message": "Booking cancelled successfully"}
+
+@router.post("/{booking_id}/refund")
+async def refund_booking(
+    booking_id: str,
+    current_user: User = Depends(require_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Issue refund for a paid booking
+    
+    Owner only endpoint
+    """
+    # Find booking with car
+    query = select(Booking, Car).join(
+        Car, Booking.car_id == Car.id
+    ).where(Booking.id == booking_id)
+    
+    result = await db.execute(query)
+    booking_data = result.first()
+    
+    if not booking_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking not found"
+        )
+    
+    booking, car = booking_data
+    
+    # Check car ownership
+    if car.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only refund bookings for your own cars"
+        )
+    
+    # Check payment status
+    if booking.payment_status != 'paid':
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot refund booking with payment status: {booking.payment_status}"
+        )
+    
+    if not booking.payment_intent_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No payment intent found for this booking"
+        )
+    
+    # Create refund
+    try:
+        refund_data = refund_payment(booking.payment_intent_id)
+        
+        # Update booking
+        booking.payment_status = 'refunded'
+        booking.status = 'cancelled'
+        await db.commit()
+        await db.refresh(booking)
+        
+        return {
+            "message": "Refund processed successfully",
+            "refund_id": refund_data.get('id'),
+            "amount": refund_data.get('amount', 0) / 100,
+            "status": refund_data.get('status')
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process refund: {str(e)}"
+        )

@@ -11,15 +11,15 @@ import {
   Filter,
   X,
   AlertCircle,
+  CreditCard,
 } from 'lucide-react';
 
 import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { CarCardSkeleton } from '../components/LoadingSkeleton';
-
-
 import ChatBox from '../components/ChatBox';
+import PaymentModal from '../components/PaymentModal';
 
 
 
@@ -34,6 +34,8 @@ const MyBookings = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeChat, setActiveChat] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [paymentModal, setPaymentModal] = useState({ isOpen: false, booking: null, clientSecret: null });
+  const [loadingPayment, setLoadingPayment] = useState(false);
 
   useEffect(() => {
     // Check authentication and role
@@ -88,6 +90,38 @@ const MyBookings = () => {
 
   const getStatusLabel = (status) => {
     return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  const getPaymentStatusBadgeClass = (paymentStatus) => {
+    switch (paymentStatus) {
+      case 'paid':
+        return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+      case 'failed':
+        return 'bg-red-100 text-red-800 border border-red-200';
+      case 'refunded':
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+    }
+  };
+
+  const handleCompletePayment = async (booking) => {
+    try {
+      setLoadingPayment(true);
+      const response = await api.get(`/api/bookings/${booking.id}/payment-intent`);
+      setPaymentModal({
+        isOpen: true,
+        booking: booking,
+        clientSecret: response.data.client_secret
+      });
+    } catch (error) {
+      console.error('Error fetching payment intent:', error);
+      alert(error.response?.data?.detail || 'Failed to initialize payment. Please try again.');
+    } finally {
+      setLoadingPayment(false);
+    }
   };
 
   // Show loading while checking auth
@@ -210,7 +244,7 @@ const MyBookings = () => {
                       </div>
                     </div>
                   )}
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-3 right-3 flex flex-col gap-2">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(
                         booking.status
@@ -218,6 +252,18 @@ const MyBookings = () => {
                     >
                       {getStatusLabel(booking.status)}
                     </span>
+                    {booking.payment_status && (
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getPaymentStatusBadgeClass(
+                          booking.payment_status
+                        )}`}
+                      >
+                        {booking.payment_status === 'paid' ? 'Paid' : 
+                         booking.payment_status === 'pending' ? 'Payment Pending' :
+                         booking.payment_status === 'failed' ? 'Payment Failed' :
+                         booking.payment_status === 'refunded' ? 'Refunded' : booking.payment_status}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -272,6 +318,32 @@ const MyBookings = () => {
                       Rs. {booking.total_price?.toFixed(2) || '0.00'}
                     </span>
                   </div>
+
+                  {/* Payment Status and Actions */}
+                  {booking.payment_status === 'paid' && booking.stripe_payment_method && (
+                    <div className="mt-4 pt-4 border-t bg-emerald-50 rounded-md p-4">
+                      <p className="text-sm text-emerald-800">
+                        <CreditCard className="w-4 h-4 inline mr-1" />
+                        Paid with {booking.stripe_payment_method}
+                      </p>
+                      {booking.amount_paid && (
+                        <p className="text-xs text-emerald-700 mt-1">
+                          Amount paid: Rs. {booking.amount_paid.toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {(booking.payment_status === 'pending' || booking.payment_status === 'failed') && (
+                    <button
+                      onClick={() => handleCompletePayment(booking)}
+                      disabled={loadingPayment}
+                      className="mt-4 w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CreditCard className="w-5 h-5" />
+                      {loadingPayment ? 'Loading...' : 'Complete Payment'}
+                    </button>
+                  )}
 
                   {/* Owner Contact Info (if confirmed) */}
                   {booking.status === 'confirmed' && booking.owner_name && (
@@ -348,6 +420,14 @@ const MyBookings = () => {
         )}
       </AnimatePresence>
 
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={paymentModal.isOpen}
+        onClose={() => setPaymentModal({ isOpen: false, booking: null, clientSecret: null })}
+        booking={paymentModal.booking}
+        clientSecret={paymentModal.clientSecret}
+      />
+
       {/* Booking Details Modal */}
       <AnimatePresence>
         {selectedBooking && (
@@ -380,11 +460,19 @@ const MyBookings = () => {
 
               {/* Modal Content */}
               <div className="p-6">
-                {/* Status Badge */}
-                <div className="mb-6">
+                {/* Status Badges */}
+                <div className="mb-6 flex gap-2">
                   <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${getStatusBadgeClass(selectedBooking.status)}`}>
                     {getStatusLabel(selectedBooking.status)}
                   </span>
+                  {selectedBooking.payment_status && (
+                    <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${getPaymentStatusBadgeClass(selectedBooking.payment_status)}`}>
+                      {selectedBooking.payment_status === 'paid' ? 'Paid' : 
+                       selectedBooking.payment_status === 'pending' ? 'Payment Pending' :
+                       selectedBooking.payment_status === 'failed' ? 'Payment Failed' :
+                       selectedBooking.payment_status === 'refunded' ? 'Refunded' : selectedBooking.payment_status}
+                    </span>
+                  )}
                 </div>
 
                 {/* Car Image */}
@@ -474,12 +562,32 @@ const MyBookings = () => {
                       <p className="text-4xl font-bold text-red-600">
                         Rs. {selectedBooking.total_price?.toFixed(2) || '0.00'}
                       </p>
+                      {selectedBooking.payment_status === 'paid' && selectedBooking.stripe_payment_method && (
+                        <p className="text-sm text-emerald-700 mt-2">
+                          <CreditCard className="w-4 h-4 inline mr-1" />
+                          Paid with {selectedBooking.stripe_payment_method}
+                        </p>
+                      )}
                     </div>
                     <svg className="w-16 h-16 text-red-600 opacity-20" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z" />
                     </svg>
                   </div>
                 </div>
+
+                {/* Payment Action */}
+                {(selectedBooking.payment_status === 'pending' || selectedBooking.payment_status === 'failed') && (
+                  <div className="mb-6">
+                    <button
+                      onClick={() => handleCompletePayment(selectedBooking)}
+                      disabled={loadingPayment}
+                      className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CreditCard className="w-5 h-5" />
+                      {loadingPayment ? 'Loading...' : 'Complete Payment'}
+                    </button>
+                  </div>
+                )}
 
                 {/* Owner Contact Info (if confirmed) */}
                 {selectedBooking.status === 'confirmed' && selectedBooking.owner_name && (

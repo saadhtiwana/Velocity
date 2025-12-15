@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
+import { CreditCard, RefreshCw } from 'lucide-react';
 import api from '../../utils/api';
 
 import ChatBox from '../../components/ChatBox';
@@ -14,6 +15,7 @@ const ManageBookings = () => {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [activeChat, setActiveChat] = useState(null);
+  const [refundingBookingId, setRefundingBookingId] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -40,6 +42,39 @@ const ManageBookings = () => {
       setBookings(bookings.map(b => (b.id === bookingId ? response.data : b)));
     } catch (err) {
       alert(err.response?.data?.detail || `Failed to ${newStatus} booking`);
+    }
+  };
+
+  const handleRefund = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to issue a refund for this booking? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setRefundingBookingId(bookingId);
+      const response = await api.post(`/api/bookings/${bookingId}/refund`);
+      alert(`Refund processed successfully. Refund ID: ${response.data.refund_id}`);
+      // Refresh bookings
+      fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to process refund');
+    } finally {
+      setRefundingBookingId(null);
+    }
+  };
+
+  const getPaymentStatusBadgeClass = (paymentStatus) => {
+    switch (paymentStatus) {
+      case 'paid':
+        return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+      case 'failed':
+        return 'bg-red-100 text-red-800 border border-red-200';
+      case 'refunded':
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
     }
   };
 
@@ -130,7 +165,7 @@ const ManageBookings = () => {
                         <h3 className="text-lg font-bold text-gray-900">
                           {booking.car_brand} {booking.car_model}
                         </h3>
-                        <div className="mt-2">
+                        <div className="mt-2 flex flex-col gap-2">
                           <span
                             className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
                               booking.status
@@ -138,6 +173,18 @@ const ManageBookings = () => {
                           >
                             {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                           </span>
+                          {booking.payment_status && (
+                            <span
+                              className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusBadgeClass(
+                                booking.payment_status
+                              )}`}
+                            >
+                              {booking.payment_status === 'paid' ? 'Paid' : 
+                               booking.payment_status === 'pending' ? 'Payment Pending' :
+                               booking.payment_status === 'failed' ? 'Payment Failed' :
+                               booking.payment_status === 'refunded' ? 'Refunded' : booking.payment_status}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -164,6 +211,12 @@ const ManageBookings = () => {
                       <p className="text-xl font-bold text-red-600">
                         Rs. {booking.total_price.toFixed(2)}
                       </p>
+                      {booking.payment_status === 'paid' && booking.stripe_payment_method && (
+                        <p className="text-xs text-emerald-700 mt-1">
+                          <CreditCard className="w-3 h-3 inline mr-1" />
+                          Paid with {booking.stripe_payment_method}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -171,18 +224,31 @@ const ManageBookings = () => {
                   <div className="lg:col-span-1 flex flex-col justify-center gap-3">
                     {booking.status === 'pending' && (
                       <>
-                        <button
-                          onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
-                          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
-                        >
-                          Confirm Booking
-                        </button>
-                        <button
-                          onClick={() => handleUpdateStatus(booking.id, 'rejected')}
-                          className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                        >
-                          Reject Booking
-                        </button>
+                        {booking.payment_status === 'paid' ? (
+                          <>
+                            <button
+                              onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
+                              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                            >
+                              Confirm Booking
+                            </button>
+                            <button
+                              onClick={() => handleUpdateStatus(booking.id, 'rejected')}
+                              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                            >
+                              Reject Booking
+                            </button>
+                          </>
+                        ) : (
+                          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p className="text-sm text-yellow-800 font-semibold">
+                              ⚠ Payment Pending
+                            </p>
+                            <p className="text-xs text-yellow-700 mt-1">
+                              Wait for payment before confirming
+                            </p>
+                          </div>
+                        )}
                       </>
                     )}
                     {booking.status === 'confirmed' && (
@@ -211,6 +277,25 @@ const ManageBookings = () => {
                           </svg>
                           Chat with Renter
                         </button>
+                        {booking.payment_status === 'paid' && (
+                          <button
+                            onClick={() => handleRefund(booking.id)}
+                            disabled={refundingBookingId === booking.id}
+                            className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {refundingBookingId === booking.id ? (
+                              <>
+                                <RefreshCw className="w-5 h-5 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="w-5 h-5" />
+                                Issue Refund
+                              </>
+                            )}
+                          </button>
+                        )}
                       </>
                     )}
                   </div>

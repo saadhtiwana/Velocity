@@ -95,6 +95,16 @@ httpx==0.25.2
 pytest-asyncio==0.21.1
 
 # ============================================
+# PAYMENT PROCESSING
+# ============================================
+
+# Stripe - Payment processing library
+stripe==7.8.0
+
+# Requests - HTTP library for direct Stripe API calls
+requests==2.31.0
+
+# ============================================
 # ADDITIONAL NOTES
 # ============================================
 #

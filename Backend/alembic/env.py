@@ -5,6 +5,16 @@ from sqlalchemy import pool
 
 from alembic import context
 
+# Import Base and settings
+import sys
+from pathlib import Path
+
+# Add the parent directory to the path so we can import app
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app.database import Base
+from app.config import settings
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -14,11 +24,22 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Set the database URL from settings
+# Convert async URL to sync for Alembic (Alembic doesn't support async)
+database_url = settings.DATABASE_URL
+if database_url.startswith("postgresql+asyncpg://"):
+    database_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
+elif database_url.startswith("sqlite+aiosqlite://"):
+    database_url = database_url.replace("sqlite+aiosqlite://", "sqlite://")
+
+config.set_main_option("sqlalchemy.url", database_url)
+
+# Import all models to ensure they're registered with Base.metadata
+from app.models import user, car, booking, message  # noqa
+
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -39,6 +60,9 @@ def run_migrations_offline() -> None:
 
     """
     url = config.get_main_option("sqlalchemy.url")
+    if url is None:
+        raise ValueError("Database URL not configured. Please set DATABASE_URL in .env file.")
+    
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -57,8 +81,17 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # Get the database URL
+    url = config.get_main_option("sqlalchemy.url")
+    if url is None:
+        raise ValueError("Database URL not configured. Please set DATABASE_URL in .env file.")
+    
+    # Create engine configuration
+    configuration = config.get_section(config.config_ini_section, {})
+    configuration["sqlalchemy.url"] = url
+    
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

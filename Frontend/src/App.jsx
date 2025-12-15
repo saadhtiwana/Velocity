@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { StripeProvider } from './context/StripeContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -37,7 +38,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <AppContent />
+      <StripeProvider>
+        <AppContent />
+      </StripeProvider>
     </AuthProvider>
   )
 }
